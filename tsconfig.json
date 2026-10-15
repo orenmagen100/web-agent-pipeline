@@ -14,5 +14,5 @@
     "sourceMap": true,
     "types": ["node"]
   },
-  "include": ["cli.ts", "src/**/*.ts"]
+  "include": ["cli.ts", "server.ts", "src/**/*.ts"]
 }

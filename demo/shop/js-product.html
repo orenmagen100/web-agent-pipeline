@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <title>Maps of Forgotten Rivers | Demo Shop</title>
+  <link rel="stylesheet" href="/shop/style.css">
+  <script>window.dataLayer = []; function track(){}</script>
+</head>
+<body>
+  <div id="cookie-banner" class="cookie-consent">We use cookies to personalise ads. <button>Accept</button></div>
+  <header class="header"><a href="/shop/">Demo Shop</a> · <a href="/shop/basket">Basket (0)</a></header>
+  <ul class="breadcrumb">
+    <li><a href="/shop/">Home</a></li>
+    <li><a href="/shop/category/books">Books</a></li>
+    <li><a href="/shop/category/travel">Travel</a></li>
+    <li class="active">Maps of Forgotten Rivers</li>
+  </ul>
+  <nav class="side_categories"><ul>
+    <li><a href="/shop/category/travel">Travel</a></li><li><a href="/shop/category/mystery">Mystery</a></li>
+    <li><a href="/shop/category/science">Science</a></li><li><a href="/shop/category/poetry">Poetry</a></li>
+    <li><a href="/shop/category/history">History</a></li><li><a href="/shop/category/fiction">Fiction</a></li>
+  </ul></nav>
+  <article class="product_page">
+    <div class="row">
+      <div class="col-sm-6"><img src="/shop/img/cover.jpg" alt="Maps of Forgotten Rivers"></div>
+      <div class="col-sm-6 product_main">
+        <h1>Maps of Forgotten Rivers</h1>
+        <div id="live-offer"><p class="loading">Loading price…</p></div>
+        <p class="star-rating Five"><i class="icon-star"></i></p>
+      </div>
+    </div>
+    <div id="product_description" class="sub-header"><h2>Product Description</h2></div>
+    <p>A sample product page served by the local demo shop. Its markup mirrors books.toscrape.com
+       so the same extraction template works on both. The description is long enough to look like
+       real content to the main-content detector, which is what a real product page would provide.</p>
+    <div class="sub-header"><h2>Product Information</h2></div>
+    <table class="table table-striped">
+      <tr><th>UPC</th><td>c41e08aa93f27b15</td></tr>
+      <tr><th>Product Type</th><td>Books</td></tr>
+      <tr><th>Price (excl. tax)</th><td>—</td></tr>
+      <tr><th>Tax</th><td>£0.00</td></tr>
+      <tr><th>Number of reviews</th><td>31</td></tr>
+    </table>
+    <script>
+      // Price and stock come from a pricing API after page load, like most modern shops.
+      setTimeout(() => {
+        document.getElementById('live-offer').innerHTML =
+          '<p class="price_color">£22.10</p>' +
+          '<p class="instock availability"><i class="icon-ok"></i> In stock (3 available)</p>';
+      }, 600);
+    </script>
+  </article>
+  <footer class="footer"><p>Demo Shop is a fictional store for testing scrapers. <a href="/shop/terms">Terms</a> · <a href="/shop/privacy">Privacy</a></p></footer>
+</body>
+</html>

@@ -11,7 +11,8 @@
     "start": "tsc -p tsconfig.json && node dist/cli.js",
     "cli": "node dist/cli.js",
     "test": "vitest run",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "demo": "tsc -p tsconfig.json && node dist/server.js"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Web-to-Agent Playground</title>
+<style>
+  :root { --bg:#f7f7f5; --card:#fff; --ink:#1d1d1b; --muted:#6b6b66; --line:#e4e4df; --accent:#2f5bea;
+          --ok:#1a7f37; --partial:#b26b00; --blocked:#b42318; --failed:#6b21a8; }
+  * { box-sizing: border-box; }
+  body { margin:0; font:15px/1.5 system-ui,-apple-system,sans-serif; background:var(--bg); color:var(--ink); }
+  main { max-width:1100px; margin:0 auto; padding:24px 16px 48px; }
+  h1 { font-size:22px; margin:0 0 4px; } .sub { color:var(--muted); margin:0 0 20px; }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:10px; padding:16px; }
+  form { display:grid; gap:12px; }
+  .row { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  input[type=text] { flex:1; min-width:240px; padding:9px 11px; border:1px solid var(--line); border-radius:8px; font:inherit; }
+  select, button { font:inherit; padding:8px 12px; border-radius:8px; border:1px solid var(--line); background:#fff; cursor:pointer; }
+  button.primary { background:var(--accent); color:#fff; border-color:var(--accent); }
+  .presets button { font-size:13px; padding:5px 10px; }
+  .presets span { color:var(--muted); font-size:13px; }
+  #result { margin-top:16px; display:none; gap:16px; }
+  .status { display:inline-block; padding:3px 10px; border-radius:999px; color:#fff; font-weight:600; font-size:13px; text-transform:uppercase; }
+  .reasons { margin:8px 0 0; padding-left:18px; color:var(--muted); font-size:14px; }
+  .metrics { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .metric b { display:block; font-size:20px; } .metric span { color:var(--muted); font-size:13px; }
+  .bars { margin-top:12px; display:grid; gap:6px; font-size:13px; }
+  .bar { height:14px; border-radius:4px; background:#c9cbd3; } .bar.md { background:var(--accent); }
+  .panes { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:800px){ .panes { grid-template-columns:1fr; } }
+  pre { margin:0; white-space:pre-wrap; word-break:break-word; font:12.5px/1.5 ui-monospace,Menlo,monospace; max-height:520px; overflow:auto; }
+  h2 { font-size:14px; margin:0 0 10px; color:var(--muted); text-transform:uppercase; letter-spacing:.04em; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Web → Agent playground</h1>
+  <p class="sub">Give it a URL. Get back clean Markdown for an LLM and validated JSON from a reusable template.</p>
+
+  <div class="card">
+    <form id="f">
+      <div class="row">
+        <input type="text" id="url" placeholder="https://…" required>
+        <button class="primary" type="submit" id="go">Scrape</button>
+      </div>
+      <div class="row">
+        <label><input type="checkbox" id="render" checked> Render JavaScript</label>
+        <label>Wait for selector <input type="text" id="waitFor" style="min-width:140px;flex:0" placeholder=".price_color"></label>
+        <label>Template <select id="template"><option value="">none (Markdown only)</option></select></label>
+      </div>
+      <div class="row presets" id="presets"><span>Try:</span></div>
+    </form>
+  </div>
+
+  <div id="result">
+    <div class="card" style="margin-top:16px">
+      <span class="status" id="status"></span> <span id="url-out" style="color:var(--muted);font-size:13px"></span>
+      <ul class="reasons" id="reasons"></ul>
+    </div>
+    <div class="card" style="margin-top:16px">
+      <div class="metrics" id="metrics"></div>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="panes" style="margin-top:16px">
+      <div class="card"><h2>Structured JSON</h2><pre id="json"></pre></div>
+      <div class="card"><h2>LLM-ready Markdown</h2><pre id="md"></pre></div>
+    </div>
+  </div>
+</main>
+<script>
+const $ = (id) => document.getElementById(id);
+const origin = location.origin;
+const PRESETS = [
+  { label: 'Static product', url: `${origin}/shop/static-product.html`, template: 'product' },
+  { label: 'JS product (rendered)', url: `${origin}/shop/js-product.html`, template: 'product', waitFor: '.price_color' },
+  { label: 'JS product (no JS)', url: `${origin}/shop/js-product.html`, template: 'product', render: false },
+  { label: 'Missing price', url: `${origin}/shop/missing-price.html`, template: 'product' },
+  { label: 'CAPTCHA page', url: `${origin}/shop/blocked.html`, template: 'product' },
+  { label: 'books.toscrape (needs network)', url: 'https://books.toscrape.com/catalogue/a-light-in-the-attic_1000/index.html', template: 'product' },
+];
+const COLORS = { ok: 'var(--ok)', partial: 'var(--partial)', blocked: 'var(--blocked)', failed: 'var(--failed)' };
+
+fetch('/api/templates').then((r) => r.json()).then((names) => {
+  for (const n of names) $('template').add(new Option(n, n));
+  PRESETS.forEach((p, i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.textContent = p.label;
+    b.onclick = () => { applyPreset(p); run(); };
+    $('presets').appendChild(b);
+    if (i === 0) applyPreset(p);
+  });
+});
+
+function applyPreset(p) {
+  $('url').value = p.url; $('template').value = p.template ?? '';
+  $('waitFor').value = p.waitFor ?? ''; $('render').checked = p.render !== false;
+}
+
+$('f').onsubmit = (e) => { e.preventDefault(); run(); };
+
+async function run() {
+  $('go').disabled = true; $('go').textContent = 'Scraping…';
+  const q = new URLSearchParams({ url: $('url').value, render: $('render').checked, waitFor: $('waitFor').value, template: $('template').value });
+  try { show(await (await fetch(`/api/scrape?${q}`)).json()); }
+  finally { $('go').disabled = false; $('go').textContent = 'Scrape'; }
+}
+
+function show(r) {
+  $('result').style.display = 'block';
+  $('status').textContent = r.status; $('status').style.background = COLORS[r.status];
+  $('url-out').textContent = r.url;
+  $('reasons').innerHTML = '';
+  for (const reason of r.reasons) $('reasons').appendChild(Object.assign(document.createElement('li'), { textContent: reason }));
+  $('json').textContent = r.data ? JSON.stringify(r.data, null, 2) : '(no structured data)';
+  $('md').textContent = r.markdown || '(empty)';
+  const m = r.metrics;
+  if (!m) { $('metrics').innerHTML = ''; $('bars').innerHTML = ''; return; }
+  const tiles = [
+    [m.htmlTokens.toLocaleString(), 'raw HTML tokens'], [m.markdownTokens.toLocaleString(), 'Markdown tokens'],
+    [`−${m.tokenReductionPct}%`, 'tokens saved'], [`${m.fetchMs} ms`, `fetch (${m.attempts} attempt${m.attempts > 1 ? 's' : ''})`],
+    [`${m.processMs} ms`, 'clean + extract + validate'],
+  ];
+  $('metrics').innerHTML = tiles.map(([v, l]) => `<div class="metric"><b>${v}</b><span>${l}</span></div>`).join('');
+  const pct = Math.max(1, (100 * m.markdownTokens) / m.htmlTokens);
+  $('bars').innerHTML = `<div>HTML</div><div class="bar" style="width:100%"></div>
+    <div>Markdown</div><div class="bar md" style="width:${pct}%"></div>`;
+}
+</script>
+</body>
+</html>
