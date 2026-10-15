@@ -22,6 +22,8 @@ pnpm demo            # builds, starts http://localhost:3000
 - `http://localhost:3000/api/scrape?url=<url>&template=product&render=true&waitFor=.price_color`: the API
 
 Chromium comes from Playwright. If it isn't installed on your machine, run `pnpm exec playwright install chromium` once.
+npm works too: `npm install && npx playwright install chromium && npm run demo`.
+If the Chromium download fails, use your installed Google Chrome instead: `BROWSER_CHANNEL=chrome npm run demo`.
 
 ## How it works
 

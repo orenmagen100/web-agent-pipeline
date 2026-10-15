@@ -41,7 +41,8 @@ export class Fetcher {
   private browser: Browser | undefined;
 
   async start(): Promise<void> {
-    this.browser ??= await chromium.launch({ headless: true });
+    // BROWSER_CHANNEL=chrome uses the locally installed Google Chrome instead of Playwright's Chromium.
+    this.browser ??= await chromium.launch({ headless: true, channel: process.env.BROWSER_CHANNEL || undefined });
   }
 
   async close(): Promise<void> {
