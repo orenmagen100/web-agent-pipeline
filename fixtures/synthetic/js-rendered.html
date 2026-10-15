@@ -1,0 +1,17 @@
+<!doctype html>
+<html>
+<head><title>JS rendered list</title></head>
+<body>
+  <div class="container"><h1>Quotes</h1><div id="list"></div></div>
+  <script>
+    // Render after a delay, like a client-side app waiting on an API call.
+    setTimeout(() => {
+      const quotes = [['Simplicity is prerequisite for reliability.', 'Edsger Dijkstra'],
+                      ['Premature optimization is the root of all evil.', 'Donald Knuth']];
+      document.getElementById('list').innerHTML = quotes
+        .map(([t, a]) => `<div class="quote"><span class="text">${t}</span> <small class="author">${a}</small></div>`)
+        .join('');
+    }, 300);
+  </script>
+</body>
+</html>
