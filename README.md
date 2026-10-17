@@ -27,6 +27,8 @@ If the Chromium download fails, use your installed Google Chrome instead: `BROWS
 
 ## How it works
 
+For how this maps onto a full web-data platform (Web API, proxy routing, Jobs, LLM parsing, agents), see [docs/nimble-dataflow.md](docs/nimble-dataflow.md).
+
 ```mermaid
 flowchart LR
   A[URL] --> B[Fetch<br/>Playwright: render JS,<br/>wait for selector,<br/>retry + backoff]
